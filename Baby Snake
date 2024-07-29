@@ -1,0 +1,125 @@
+from graphics import Canvas
+import time
+import random
+    
+CANVAS_WIDTH = 400
+CANVAS_HEIGHT = 400
+SIZE = 20
+CRASH_SIZE = 19
+STARTING_POS_PLAY = 0
+STARTING_POS_GOAL = random.randrange(20,380,20)
+# if you make this larger, the game will go slower
+DELAY = 0.1 
+
+def main():
+    runned = 0
+    canvas = Canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
+    # TODO: your code here
+    # Starting position of the player's snake
+    move_x = STARTING_POS_PLAY
+    move_y = STARTING_POS_PLAY
+    # Show the player's snake
+    player_sq = player(canvas, move_x, move_y)
+    #Starting position of the goal
+    start_x = STARTING_POS_GOAL
+    start_y = STARTING_POS_GOAL
+    # Show the first food goal of the snake
+    goal_sq = goal(canvas, start_x, start_y, 'salmon')
+    # Number of figures in the canvas
+    # This is a counter so that the last goal turns white
+    # and the program doesnt take it into acount on the next loop
+    figures = '1'
+    # Keep track of points
+    points = 0
+    #Show how many points the player has
+    score_board = canvas.create_text(20, 380, font='Arial', font_size = 8, text=str(points)+' Points!', color='black')
+    
+    # This loop will animate the game
+    while True:
+        # Get the key pressed by the user to change direction
+        # If no key is pressed the snake will continue the movement that
+        # had before, that means that will not move if no key pressed
+        key = canvas.get_last_key_press()
+        # Getting the objects coordinates
+        player_x = canvas.get_left_x(player_sq)
+        player_y = canvas.get_top_y(player_sq)
+        #print(player_x, player_y)
+        goal_x = canvas.get_left_x(goal_sq)
+        goal_y = canvas.get_top_y(goal_sq)
+        #print(goal_x, goal_y)
+        # If the snake crashes against the sides the loop ends
+        if player_x < 0 or player_x + CRASH_SIZE >= 400 or player_y < 0 or player_y + CRASH_SIZE >= 400:
+            break
+        else:
+            # This ifs will change the direction of the snake's trajectory
+            if key == "ArrowRight":
+                move_x += SIZE
+            elif key == "ArrowLeft":
+                move_x -= SIZE
+            elif key == "ArrowUp":
+                move_y -= SIZE
+            elif key == "ArrowDown":
+                move_y += SIZE
+            else:
+                move_x = move_x
+                move_y = move_y
+        canvas.moveto(player_sq, move_x, move_y)
+        
+        # Check when the goal and player are overlapping
+        overlapping = canvas.find_overlapping(player_x, player_y, player_x+SIZE, player_y+SIZE)
+        #print(overlapping)
+        if 'shape_'+figures in overlapping:
+            #goal_sq = goal(canvas, start_x, start_y, 'white')
+            canvas.delete(goal_sq)
+            #canvas.change_text(score_board, is_hidden)
+            start_x = random.randrange(0,CANVAS_WIDTH-SIZE,20)
+            start_y = random.randrange(0,CANVAS_HEIGHT-SIZE,20)
+            goal_sq = goal(canvas, start_x, start_y, 'salmon')
+            figures = int(figures)
+            figures += 2
+            figures = str(figures)
+            points += 1
+            #Show how many points the player has
+            score_board = canvas.create_text(20, 380, font='Arial', font_size = 8, text=str(points)+' Points!', color='black')
+            ###### THIS IS MAKING IT JUMP NOT ACCELERATE
+            #move_x *= 1.1
+            #move_y *= 1.1
+                
+        #### THIS HAS TO BE CORRECTED ###
+        #if player_x + SIZE == goal_x or player_y + SIZE == goal_y:
+        #    goal_sq = goal(canvas, start_x, start_y, 'white')
+        #    start_x = random.randrange(0,CANVAS_WIDTH-SIZE,20)
+        #    start_y = random.randrange(0,CANVAS_HEIGHT-SIZE,20)
+        #    goal_sq = goal(canvas, start_x, start_y, 'salmon')
+        # IT IS NOT MOVING LIKE IT SHOULD
+        ###########################################    
+        
+        # This will move the actual snake in the direction choosen
+        canvas.moveto(player_sq, move_x, move_y)
+        #figures = int(figures)
+        #figures += 1
+        #figures = str(figures)
+        # Time delay between frames
+        runned += 1
+        print(runned)
+        time.sleep(DELAY)
+    
+    
+def player(canvas,x,y):
+    # Player's snake
+    play_x = x
+    play_y = y
+    snake = canvas.create_rectangle(play_x,play_y,play_x+SIZE,play_y+SIZE, 'blue')
+    return snake
+    
+def goal(canvas,x,y,color):
+    # Food goal for the snake to look for
+    goal_x = x
+    goal_y = y
+    goal_color = color
+    goal_sq = canvas.create_rectangle(goal_x,goal_y,goal_x+SIZE,goal_y+SIZE, goal_color)
+    return goal_sq
+    
+
+if __name__ == '__main__':
+    main()
