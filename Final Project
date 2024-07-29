@@ -1,0 +1,212 @@
+from graphics import Canvas
+import time
+import random
+
+# Canvas    
+CANVAS_WIDTH = 400
+CANVAS_HEIGHT = 450
+# Ball
+START = random.randint(100,250)
+START_DIRECTION = random.choice([-1, 1])
+BALL_DIAMETER = 15
+INITIAL_VELOCITY = 4
+INCREASE_IN_VELOCITY = 1
+# Frames
+DELAY = 1/100
+CHANGE_SPEED_FRAMES = 250
+# Pad
+PAD_Y = 430
+PAD_THICK = 5
+# Text position
+TEXT_X = 160
+TEXT_Y = 225
+NEW_LINE = 15
+
+def main():
+    canvas = Canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
+    # TODO: your code here!
+    # Draw the wall
+    rectangles(canvas)
+    # Initialize the pad
+    pad = paddle(canvas, START)
+    # Initialize the Ball
+    # Initial random position of the ball
+    ball_x = START
+    ball_y = START
+    # Initial ball velocity (change of position between frames)
+    x_velocity = START_DIRECTION * INITIAL_VELOCITY
+    y_velocity = INITIAL_VELOCITY
+    ball_in_play = ball(canvas, ball_x, ball_y)
+    # Variable to follow the number of erased blocks
+    block = 0
+    # Variable counting the frames
+    frame = 0
+    # Variable to count the lives left
+    lives = 2
+    
+    # WELLCOME TEXT
+    wellcome = canvas.create_text(TEXT_X-80,TEXT_Y,text='HELLO TO THE BREAK THE WALL GAME')
+    wellcome1 = canvas.create_text(TEXT_X-80,TEXT_Y+NEW_LINE,text='PLEASE CLICK TO START THE GAME')
+    wellcome2 = canvas.create_text(TEXT_X,TEXT_Y+2*NEW_LINE,text='GOOD LUCK!')
+    # INSTRUCTIONS FOR THE GAME
+    instruction0 = canvas.create_text(TEXT_X-100,TEXT_Y+5*NEW_LINE,text='GAME INSTRUCTIONS:')
+    instruction = canvas.create_text(TEXT_X-100,TEXT_Y+6*NEW_LINE,text='TO MOVE THE PAD AND HIT THE BALL MOVE THE MOUSE')
+    instruction1 = canvas.create_text(TEXT_X-100,TEXT_Y+7*NEW_LINE,text='FOR THE MOUSE TO MOVE THE PAD, THE POINTER HAS')
+    instruction2 = canvas.create_text(TEXT_X-100,TEXT_Y+8*NEW_LINE,text='TO BE INSIDE THE CANVAS. BREAK THE WALL TO WIN.')
+    
+    # THE GAME START WITH THE CLICK OF THE PLAYER
+    if canvas.wait_for_click() != " ":
+        # DELETE THE WELLCOME TEXT AND INSTRUCTIONS
+        canvas.delete(wellcome)
+        canvas.delete(wellcome1)
+        canvas.delete(wellcome2)
+        canvas.delete(instruction0)
+        canvas.delete(instruction)
+        canvas.delete(instruction1)
+        canvas.delete(instruction2)
+
+        ###GAME MOVEMENT###
+        while True:
+            # Pad movement
+            # Get the mouse position
+            mouse_x = canvas.get_mouse_x()
+            # Move the pad inside the canvas on a fix Y position and mouse X position
+            if 0 <= mouse_x <= CANVAS_WIDTH-50:
+                canvas.moveto(pad, mouse_x, PAD_Y)
+                
+            ###Ball movement
+            # Maintain the ball moving inside the canvas
+            # When the ball reaches the wall bounce back
+            if (ball_x <= 2) or (ball_x + BALL_DIAMETER >= CANVAS_WIDTH):
+                x_velocity = -x_velocity
+            if (ball_y <= 2):
+                y_velocity = -y_velocity
+            # If it reaches the wall below the pad 3 times it's game over
+            if (ball_y + BALL_DIAMETER > CANVAS_HEIGHT+1):
+                # Restart for each of the 3 lives
+                if lives > 1:
+                    lives -= 1
+                    lives_text = canvas.create_text(TEXT_X-80,TEXT_Y,text=str(lives+1)+' lives left, CLICK continue the game!')
+                    bricks_left = canvas.create_text(TEXT_X,TEXT_Y+NEW_LINE,text=str(40-block)+' bricks left')
+                    ball_x = START
+                    ball_y = START
+                    x_velocity = START_DIRECTION * x_velocity
+                    canvas.moveto(ball_in_play, ball_x, ball_y)
+                    canvas.wait_for_click()
+                    canvas.delete(lives_text)
+                    canvas.delete(bricks_left)
+                elif 0 < lives <= 1:
+                    lives -= 1
+                    lives_text = canvas.create_text(TEXT_X-80,TEXT_Y,text=str(lives+1)+' live left, CLICK continue the game!')
+                    bricks_left = canvas.create_text(TEXT_X,TEXT_Y+NEW_LINE,text=str(40-block)+' bricks left')
+                    ball_x = START
+                    ball_y = START
+                    x_velocity = START_DIRECTION * x_velocity
+                    canvas.moveto(ball_in_play, ball_x, ball_y)
+                    canvas.wait_for_click()
+                    canvas.delete(lives_text)
+                    canvas.delete(bricks_left)                
+                # When you run out of lives, it's GAME OVER
+                else:
+                    canvas.create_text(TEXT_X,TEXT_Y,text='GAME OVER')
+                    break
+                
+            # If the ball has not reached the lower side of the canvas, check for overlapping
+            else:
+                ##Ball change in direction when it encounters something
+                # Find the overlapping objects
+                overlapping = canvas.find_overlapping(ball_x, ball_y, ball_x+BALL_DIAMETER,ball_y+BALL_DIAMETER)
+                # Browse inside the overlapping list, the objects to be erased
+                for i in overlapping:
+                    # 'shape_41' is the Ball
+                    # So, anything other than the ball will change the movement
+                    if i != 'shape_41':
+                        x_velocity = x_velocity
+                        y_velocity = -y_velocity
+                        print('PING')
+                        # 'shape_40' is the pad
+                        # So, anything other than the pad or the ball will be erased
+                        if i != 'shape_40':
+                            canvas.delete(i)
+                            block += 1
+                            print('PONG')
+                            print('BLOCKS LEFT '+str(40-block))
+                ##
+            
+            # Else it keeps moving as it was
+            ball_x += x_velocity
+            ball_y += y_velocity
+            canvas.moveto(ball_in_play, ball_x, ball_y)
+            
+            ###
+            
+            # Winning condition
+            if block == 40:
+                canvas.create_text(TEXT_X,TEXT_Y,text='YOU WIN!!')
+                break
+            
+            ###Frames
+            # Count the frames
+            frame += 1
+            # Every CHANGE_SPEED_FRAMES frames the velocity increases according to INCREASE_IN_VELOCITY
+            if frame % CHANGE_SPEED_FRAMES == 0:
+                if x_velocity < 0:
+                    x_velocity -= INCREASE_IN_VELOCITY
+                if y_velocity < 0:
+                    y_velocity -= INCREASE_IN_VELOCITY
+                if x_velocity > 0:
+                    x_velocity += INCREASE_IN_VELOCITY
+                if y_velocity > 0:
+                    y_velocity += INCREASE_IN_VELOCITY
+            
+            # Pause between frames
+            time.sleep(DELAY)
+            ###
+        ###    
+
+def rectangles(canvas):
+    """
+    Function that constructs the initial wall to tear down
+    """
+    colors = ['red', 'blue', 'green', 'orange', 'yellow']
+    # First position of the first block
+    x1 = 5
+    y1 = 20
+    
+    # Go through the colors, and for each color construct 8 blocks
+    for j in colors:
+        # Construct each block
+        for i in range(8):
+            canvas.create_rectangle(x1,y1,x1+40,y1+5, color=j)
+            # If the next block is outside the canvas restart the x position
+            if (x1+50)>CANVAS_WIDTH:
+                x1 = 5
+            # Else move the starting position 50 pixels on x
+            else:
+                x1+=50
+        # For every 8 blocks constructed, move the position of y 10 pixels
+        # Start next row, with the next color
+        y1+=10
+
+def ball(canvas, x, y):
+    """
+    Function that shows the ball
+    """
+    ball_x = x
+    ball_y = y
+    ball = canvas.create_oval(ball_x, ball_y,
+                              ball_x + BALL_DIAMETER,
+                              ball_y + BALL_DIAMETER,'black')
+    return ball
+
+def paddle(canvas, x):
+    """ 
+    Function that shows the paddle to knock the wall down
+    """
+    # Starting paddle
+    starting_pos = x
+    pad = canvas.create_rectangle(starting_pos,PAD_Y,starting_pos+PAD_THICK*10,PAD_Y+PAD_THICK, 'salmon')
+    return pad
+    
+if __name__ == '__main__':
+    main()
