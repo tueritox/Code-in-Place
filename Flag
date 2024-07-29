@@ -1,0 +1,44 @@
+from graphics import Canvas
+import random
+
+CANVAS_WIDTH = 450
+CANVAS_HEIGHT = 300
+
+def main():
+    canvas = Canvas(CANVAS_WIDTH, CANVAS_HEIGHT)
+    # TODO, your code here
+    indonesia(canvas)
+    canvas.wait_for_click()
+    argentina(canvas)
+    
+def indonesia(canvas):
+    canvas.create_rectangle(450,150,0,0,"red")
+
+def argentina(canvas):
+    canvas.clear()
+    #sun
+    sun(canvas, CANVAS_WIDTH/2, CANVAS_HEIGHT/2, 65, "yellow")
+    #top line
+    baby_blue_lines(canvas, CANVAS_HEIGHT/3, 0)
+    #bottom line
+    baby_blue_lines(canvas, 300, CANVAS_HEIGHT * (2/3))
+    
+def baby_blue_lines(canvas, y1, y2):
+    #rectangle(left_x, top_y, right_x, bottom_y, color)
+    #variables
+    blue_colored = y1
+    white_colored = y2
+    #line
+    canvas.create_rectangle(CANVAS_WIDTH, blue_colored, 0, white_colored, "dodgerblue" ) 
+    
+def sun(canvas, center_x, center_y, size, color):
+    #variables
+    left_x = center_x - size/2
+    top_y = center_y - size/2
+    right_x = left_x + size
+    bottom_y = top_y + size
+    #draw circle
+    canvas.create_oval(left_x, top_y, right_x, bottom_y, color)
+
+if __name__ == '__main__':
+    main()
